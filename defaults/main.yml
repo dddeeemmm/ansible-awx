@@ -1,0 +1,96 @@
+---
+
+awx_k8s_install_type:  helm #ansible | kustomize | helm
+
+# Ansible
+awx_k8s_state:            present
+awx_k8s_ns:               awx
+k8s_app_image_name:       quay.io/ansible/awx-operator
+k8s_app_image_tag:        "0.20.2"
+awx_k8s_app:              awx
+k8s_app_replicas:         1
+
+# HELM
+awx_k8s_chart_version: 0.17.1
+awx_k8s_repo_url:      https://ansible.github.io/awx-operator/
+awx_k8s_chart_ref:     awx-operator/awx-operator
+
+# Kustomize
+awx_k8s_images_name:      quay.io/ansible/awx-operator
+awx_k8s_operator_version: '0.22.0'
+awx_k8s_resources: |
+    - github.com/ansible/awx-operator/config/default?ref={{ awx_k8s_operator_version }}
+
+# Database config
+awx_k8s_db_host:     postgres.domain.org
+awx_k8s_db_name:     'awx'
+awx_k8s_db_password: 'awx'
+awx_k8s_db_port:     '5432'
+awx_k8s_db_user:     'awx'
+
+# AWX instance config
+awx_k8s_ingress_type:         none
+awx_k8s_local_admin_password: password
+awx_k8s_local_admin_user:     admin
+awx_k8s_service_type:         nodeport
+awx_k8s_mode:                 kustomize
+
+# Configuration
+awx_k8s_configuration: true
+
+# AWX resources
+awx_k8s_web_resource_requirements:
+    requests:
+        cpu: 250m
+        memory: 2Gi
+    limits:
+        cpu: 1000m
+        memory: 4Gi
+awx_k8s_task_resource_requirements:
+    requests:
+        cpu: 250m
+        memory: 1Gi
+    limits:
+        cpu: 2000m
+        memory: 2Gi
+awx_k8s_ee_resource_requirements:
+    requests:
+        cpu: 250m
+        memory: 100Mi
+    limits:
+        cpu: 500m
+        memory: 2Gi
+
+# LDAP config
+awx_k8s_ldap_bind_dn:       'uid=awx,cn=users,cn=accounts,dc=domain,dc=org'
+awx_k8s_ldap_bind_password: password
+awx_k8s_ldap_server_ui:     'ldap://127.0.0.1'
+awx_k8s_ldap_start_tls:     false
+
+awx_k8s_ldap_group_search:  'LDAPSearch("CN=groups,CN=accounts,dc=domain,dc=org","SCOPE_SUBTREE","(objectClass=groupOfNames)")'
+#awx_k8s_ldap_group_type:    MemberDNGroupType
+awx_k8s_ldap_group_type_params:
+    name_attr:          'cn'
+    member_attr:        'member'
+awx_k8s_ldap_require_group: 'cn=awx,cn=groups,cn=accounts,dc=domain,dc=org'
+
+awx_k8s_ldap_user_attr_map:
+    first_name: 'givenName'
+    last_name:  'sn'
+    email:      'mail'
+
+awx_k8s_ldap_organization_map:
+    Default:
+        admins:        'cn=awx-admins,cn=groups,cn=accounts,dc=domain,dc=org'
+        remove_users:  'true'
+        remove_admins: 'true'
+
+awx_k8s_ldap_team_map:
+    test-team:
+        users:        'cn=awx-test,cn=groups,cn=accounts,dc=domain,dc=org'
+        organization: 'Default'
+        remove:       'true'
+
+awx_k8s_ldap_user_dn_template: 'uid=%(user)s,cn=users,cn=accounts,dc=domain,dc=org'
+awx_k8s_ldap_user_search:      'LDAPSearch("CN=users,CN=accounts,dc=domain,dc=org","SCOPE_SUBTREE","(cn=%(user)s)")'
+

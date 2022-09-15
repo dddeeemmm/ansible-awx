@@ -1,0 +1,30 @@
+---
+
+- import_tasks: namespace.yml
+  when: awx_k8s_install_type == 'ansible'
+  tags: ['awx_operator']
+
+- import_tasks: operator.yml
+  when: awx_k8s_install_type == 'ansible'
+  tags: ['awx_operator']
+
+- import_tasks: kustomization.yml
+  when: awx_k8s_install_type == 'kustomize'
+  tags: ['awx_operator']
+
+- import_tasks: helm.yml
+  when: awx_k8s_install_type == 'helm'
+
+- name: wait completion
+  shell: kubectl -n {{ awx_k8s_ns }} get deploy kubectl -n {{ awx_k8s_ns }} | xargs -I {} rollout status deploy/{} --timeout=60s
+  async: 90
+  poll: 1
+
+- import_tasks: configuration.yml
+  when: awx_k8s_configuration | bool
+  tags: ['awx_configuration']
+
+- name: wait completion
+  shell: kubectl -n {{ awx_k8s_ns }} get deploy kubectl -n {{ awx_k8s_ns }} | xargs -I {} rollout status deploy/{} --timeout=60s
+  async: 90
+  poll: 1

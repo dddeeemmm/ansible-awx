@@ -1,0 +1,17 @@
+---
+
+- name: install
+  package:
+    name: helm
+
+- name: deploy
+  kubernetes.core.helm:
+    state: '{{ awx_k8s_state }}'
+    name: awx-operator
+    release_namespace: '{{ awx_k8s_ns }}'
+    create_namespace: true
+    repo_url: '{{ awx_k8s_repo_url }}'
+    chart_ref: '{{ awx_k8s_chart_ref }}'
+    chart_version: '{{ awx_k8s_chart_version }}'
+    wait: true
+

@@ -1,0 +1,94 @@
+---
+
+- name: awx_instance | connect to database
+  k8s:
+    state: '{{ awx_k8s_state }}'
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: '{{ awx_k8s_app }}'
+        namespace: '{{ awx_k8s_ns }}'
+      stringData:
+        host: '{{ awx_k8s_db_host }}'
+        port: '{{ awx_k8s_db_port }}'
+        database: '{{ awx_k8s_db_name }}'
+        username: '{{ awx_k8s_db_user }}'
+        password: '{{ awx_k8s_db_password }}'
+        sslmode: disable
+        type: unmanaged
+      type: Opaque
+
+- name: awx_instance | local admin password
+  k8s:
+    state: '{{ awx_k8s_state }}'
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: '{{ awx_k8s_app }}'
+        namespace: '{{ awx_k8s_ns }}'
+      stringData:
+        password: '{{ awx_k8s_local_admin_password }}'
+
+- name: awx_instance | configure instance
+  k8s:
+    state: '{{ awx_k8s_state }}'
+    definition:
+      apiVersion: awx.ansible.com/v1beta1
+      kind: AWX
+      metadata:
+        name: '{{ awx_k8s_app }}'
+        namespace: '{{ awx_k8s_ns }}'
+      spec:
+        replicas: '{{ k8s_app_replicas }}'
+        service_type: '{{ awx_k8s_service_type }}'
+        ingress_type: '{{ awx_k8s_ingress_type }}'
+        admin_user: '{{ awx_k8s_local_admin_user }}'
+        web_resource_requirements: '{{ awx_k8s_web_resource_requirements }}'
+        task_resource_requirements: '{{ awx_k8s_task_resource_requirements }}'
+        ee_resource_requirements: '{{ awx_k8s_ee_resource_requirements }}'
+        extra_settings:
+
+          - setting: AUTH_LDAP_SERVER_URI
+            value: >- 
+              "{{ awx_k8s_ldap_server_ui }}"
+
+          - setting: AUTH_LDAP_BIND_DN
+            value: >-
+              "{{ awx_k8s_ldap_bind_dn }}"
+
+          - setting: AUTH_LDAP_BIND_PASSWORD
+            value: >-
+              "{{ awx_k8s_ldap_bind_password }}"
+
+          - setting: AUTH_LDAP_START_TLS
+            value: '{{ awx_k8s_ldap_start_tls }}'
+
+          - setting: AUTH_LDAP_GROUP_TYPE_PARAMS
+            value: "{{ awx_k8s_ldap_group_type_params }}"
+
+          - setting: AUTH_LDAP_REQUIRE_GROUP
+            value: >-
+              "{{ awx_k8s_ldap_require_group }}"
+
+          - setting: AUTH_LDAP_USER_DN_TEMPLATE
+            value: >-
+              "{{ awx_k8s_ldap_user_dn_template }}"
+
+          - setting: AUTH_LDAP_USER_SEARCH
+            value: >-
+              {{ awx_k8s_ldap_user_search }}
+
+          - setting: AUTH_LDAP_GROUP_SEARCH
+            value: >-
+              {{ awx_k8s_ldap_group_search }}
+
+          - setting: AUTH_LDAP_USER_ATTR_MAP
+            value: "{{ awx_k8s_ldap_user_attr_map }}"
+
+          - setting: AUTH_LDAP_ORGANIZATION_MAP
+            value: "{{ awx_k8s_ldap_organization_map }}"
+
+          - setting: AUTH_LDAP_TEAM_MAP
+            value: "{{ awx_k8s_ldap_team_map }}"

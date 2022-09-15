@@ -1,0 +1,32 @@
+---
+
+- name: check kustomize
+  stat:
+    path: /usr/bin/kustomize
+  register: awx_k8s_check_kustomize
+
+- name: install kustomize
+  shell: curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+  args:
+    chdir: /usr/bin
+  when:
+    - awx_k8s_check_kustomize is defined
+    - not awx_k8s_check_kustomize.stat.exists
+
+- name: kustomize config
+  template:
+    src: kustomization.yaml.j2
+    dest: kustomization.yaml
+
+- name: check packages
+  package_facts:
+    manager: auto
+
+- name: install git
+  package:
+    name: '{{ item }}'
+  loop: '{{ awx_k8s_packages }}'
+  when: "'git' not in ansible_facts.packages"
+
+- name: install awx operator
+  shell: kustomize build . | kubectl apply -f -

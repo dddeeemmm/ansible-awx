@@ -1,0 +1,46 @@
+---
+
+- name: create namespace
+  k8s:
+    state: '{{ awx_k8s_state }}'
+    definition:
+      api_version: v1
+      kind: Namespace
+      metadata:
+        name: '{{ awx_k8s_ns }}'
+
+- name: namespace resources
+  k8s:
+    state: '{{ awx_k8s_state }}'
+    definition:
+      apiVersion: v1
+      kind: ResourceQuota
+      metadata:
+        name: '{{ awx_k8s_app }}'
+        namespace: '{{ awx_k8s_ns }}'
+      spec:
+        hard:
+          requests.cpu: '{{ awx_k8s_namespace_cpu_requests }}'
+          requests.memory: '{{ awx_k8s_namespace_memory_requests }}'
+          limits.cpu: '{{ awx_k8s_namespace_cpu_limits }}'
+          limits.memory: '{{ awx_k8s_namespace_memory_limits }}'
+          pods: '{{ awx_k8s_namespace_pods_max_count }}'
+
+- name: pods default limit range
+  k8s:
+    state: '{{ k8s_app_state }}'
+    definition:
+      apiVersion: v1
+      kind: LimitRange
+      metadata:
+        name: '{{ awx_k8s_app }}'
+        namespace: '{{ awx_k8s_ns }}'
+      spec:
+        limits:
+          - default:
+              memory: '{{ awx_k8s_limitrange_memory_limits }}'
+              cpu: '{{ awx_k8s_limitrange_cpu_limits }}'
+            defaultRequests:
+              memory: '{{ awx_k8s_limitrange_memory_requests }}'
+              cpu: '{{ awx_k8s_limitrange_cpu_requests }}'
+            type: Container
